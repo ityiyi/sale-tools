@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>远方表格处理器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .drop-zone {
+            width: 400px;
+            height: 200px;
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        #zone1 {
+            background: #f0f8ff;
+            border-color: #87ceeb;
+        }
+        #zone2 {
+            background: #f0fff0;
+            border-color: #90ee90;
+        }
+        .drop-zone.highlight {
+            border-color: #ff4500;
+            background: #fffaf0;
+        }
+        h3 {
+            color: #333;
+            margin: 0 0 15px 0;
+        }
+        .description {
+            color: #666;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+        #message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Excel远方发货文件处理平台</h2>
+    <div class="container">
+        <!-- 功能1区域 -->
+        <div id="zone1" class="drop-zone">
+            <h3>功能1：添加优易必要信息（远方导出文件处理）</h3>
+            <div class="description">拖拽文件到此处添加「商品编码」和「店铺」列</div>
+            <div class="description">输出文件：优易导入_原文件名.xlsx</div>
+        </div>
+
+        <!-- 功能2区域 -->
+        <div id="zone2" class="drop-zone">
+            <h3>功能2：生成导入远方物流文件（优易导出文件处理）</h3>
+            <div class="description">拖拽文件到此处生成物流单文件</div>
+            <div class="description">输出文件：远方导入_原文件名.xlsx</div>
+        </div>
+    </div>
+    <div id="message"></div>
+
+<script>
+// 通用文件处理函数
+function handleFile(file, processor) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const wsname = workbook.SheetNames[0];
+            const ws = workbook.Sheets[wsname];
+            const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+            // 执行处理逻辑
+            const { newData, fileName } = processor(jsonData, file.name);
+
+            // 生成文件
+            const newWs = XLSX.utils.aoa_to_sheet(newData);
+            const newWb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(newWb, newWs, "Sheet1");
+            XLSX.writeFile(newWb, fileName);
+
+            showMessage(`✅ 处理成功！生成文件：${fileName}（共${newData.length-1}条记录）`, 'success');
+        } catch (error) {
+            showMessage(`❌ 处理失败：${error.message}`, 'error');
+        }
+    };
+    reader.onerror = () => showMessage("❌ 文件读取失败", 'error');
+    reader.readAsArrayBuffer(file);
+}
+
+// 功能1处理器
+function processor1(data, fileName) {
+    if(data.length > 0) data[0].push('商品编码', '店铺');
+    for(let i = 1; i < data.length; i++) {
+        data[i].push('6935324400042', '远方');
+    }
+    return {
+        newData: data,
+        fileName: `优易导入_${fileName}`
+    };
+}
+
+// 功能2处理器
+function processor2(data, fileName) {
+    if(data.length === 0) throw new Error("空文件");
+    
+    const header = data[0];
+    const orderIndex = header.findIndex(h => String(h).trim() === "订单号");
+    const trackIndex = header.findIndex(h => String(h).trim() === "快递单号");
+
+    if (orderIndex === -1) throw new Error("缺少「订单号」列");
+    if (trackIndex === -1) throw new Error("缺少「快递单号」列");
+
+    const newData = [
+        ["*订单号", "*物流单号", "*物流公司编码（查阅表2）", "供应链编码（整单发货不填，一个订单多包裹发货时必填）", "发货数量（整单发货不填，一个订单多包裹发货时必填）"]
+    ];
+
+    for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        newData.push([
+            row[orderIndex] || '',
+            row[trackIndex] || '',
+            "zhongtong",
+            "",
+            ""
+        ]);
+    }
+
+    return {
+        newData: newData,
+        fileName: `远方导入_${fileName}`
+    };
+}
+
+// 拖放区域事件处理
+function setupDropZone(zoneId, processor) {
+    const zone = document.getElementById(zoneId);
+
+    zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.classList.add('highlight');
+    });
+
+    zone.addEventListener('dragleave', () => {
+        zone.classList.remove('highlight');
+    });
+
+    zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('highlight');
+        
+        const files = e.dataTransfer.files;
+        if (files.length === 0) return;
+        if (files.length > 1) {
+            showMessage('⚠️ 每次仅支持处理一个文件', 'warning');
+            return;
+        }
+
+        handleFile(files[0], processor);
+    });
+}
+
+// 消息提示
+function showMessage(text, type = 'info') {
+    const msgDiv = document.getElementById('message');
+    msgDiv.textContent = text;
+    msgDiv.className = type;
+}
+
+// 初始化拖放区域
+setupDropZone('zone1', processor1);
+setupDropZone('zone2', processor2);
+</script>
+</body>
+</html>
