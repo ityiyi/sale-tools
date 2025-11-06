@@ -174,7 +174,11 @@
             'AHFJ': '安徽凰茎',
             'XKS': '小空山',
             'TJ': '天锦',
-            'XY': '土家雪滕'
+            'XY': '土家雪滕',
+            'LTS': '龙头山',
+            'TJT': '彤菌堂',
+            'SCCS': '十朝创生'
+            
         };
 
 // 获取 info-section 下的 ul 元素
@@ -442,6 +446,10 @@ if (ulElement) {
                     sheetData = buildWHAOA(outputData);
                     worksheet = XLSX.utils.aoa_to_sheet(sheetData)
                     wd = [20,20,25,20];
+                } else if (code === "TJT") {
+                    sheetData = buildTJTAOA(outputData);
+                    worksheet = XLSX.utils.aoa_to_sheet(sheetData)
+                    wd = [20,20,25,20];
                 } else if(code === "BDD"){
                     sheetData = buildBddAOA(outputData);
                     worksheet = XLSX.utils.aoa_to_sheet(sheetData);
@@ -504,6 +512,40 @@ if (ulElement) {
             return [headerRow, ...rows];
         }
 
+
+        const tjtHeaderMap = {
+             "收件人(必填)":"收货人/提货人",
+             "手机号(必填)":"收货人手机号/提货人手机号",
+             "收货地址(必填)":"详细收货地址/提货地址",
+             "商品信息(非必填)":"商品名称",
+             "数量":"商品数量",
+             "平台订单号（非必填）":"订单号"
+        };
+
+        function buildTJTAOA(data) {
+            const headerRow = Object.keys(tjtHeaderMap);
+            const rows = [];
+
+            data.forEach(item => {
+
+                const repeats = item["商品数量"] || 1;
+                
+                for (let i = 0; i < repeats; i++) {
+                    const row = headerRow.map(field => {
+                        
+                        if (field === "数量") {
+                            return 1; // 直接返回1
+                        }
+                        
+                        const dataKey = tjtHeaderMap[field];
+                        return item[dataKey] || '';
+                    });
+                    rows.push(row);
+                }
+            });
+
+            return [headerRow, ...rows];
+        }
 
         const bddHeaderMap = {
             "客户订单号":"订单号",
