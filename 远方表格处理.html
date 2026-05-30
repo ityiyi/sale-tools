@@ -103,10 +103,33 @@ function handleFile(file, processor) {
 
 // 功能1处理器
 function processor1(data, fileName) {
-    if(data.length > 0) data[0].push('商品编码', '店铺');
+    if(data.length === 0) return { newData: data, fileName };
+    
+    const header = data[0];
+    // 1. 获取「sku编码」的列索引，用于后续判断
+    const skuIndex = header.findIndex(h => String(h).trim() === "SKU编码");
+    
+    // 2. 添加表头
+    header.push('商品编码', '店铺');
+    
     for(let i = 1; i < data.length; i++) {
-        data[i].push('6935324400042', '远方');
+        let row = data[i];
+        let productCode = '6935324400042'; // 默认商品编码（保留原逻辑的默认值）
+        
+        // 3. 如果找到了「sku编码」列，则根据对应的值动态修改商品编码
+        if (skuIndex !== -1) {
+            const skuValue = String(row[skuIndex] || '').trim();
+            if (skuValue === '20017-04429925') {
+                productCode = 'PDD_WJ_002';
+            } else if (skuValue === '20017-03429925') {
+                productCode = 'PDD_WJ_001';
+            }
+        }
+        
+        // 4. 将计算后的商品编码和固定值「远方」追加到当前行
+        row.push(productCode, '远方');
     }
+    
     return {
         newData: data,
         fileName: `优易导入_${fileName}`
