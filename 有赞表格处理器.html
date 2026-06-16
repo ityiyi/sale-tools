@@ -195,7 +195,7 @@
             'SWJY': '蛇王就业',
             'SHLSS': '合理膳食',
             'HBJ': '红宝吉',
-            'TCZH': '套餐组合',
+            'TCZH': '套餐组合',//只适配了硒谷米业、铂鼎鼎单一规格
             'DHJ': '豆黄金',
             'TSTS': '天上天山'
         };
@@ -423,6 +423,10 @@ if (ulElement) {
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const date = String(today.getDate()).padStart(2, '0');
             const datePrefix = `${month}${date}`;
+
+            // ================== 修改核心：增加数据合并容器 ==================
+            // 使用一个对象将同类发货表的数据收集起来，避免重复生成相同的表格
+            const finalDataMap = {};
             
             selectedCodes.forEach(code => {
                 // 过滤数据
@@ -433,8 +437,40 @@ if (ulElement) {
                 );
                 
                 if (filteredData.length === 0) return;
+
+                // 针对套餐组合 [TCZH] 的特殊处理
+                if (code === 'TCZH') {
+                    // 1. 处理 六俱珍选&硒谷米业 数据，追加收集到 finalDataMap['XGMY']
+                    const outputDataXGMY = filteredData.map(row => {
+                        const item = {};
+                        outputFields.forEach(field => {
+                            item[field] = row[field] || '';
+                        });
+                        item['商品名称'] = '六俱珍选海伦大米地标长粒香5kg/提新米';
+                        item['商品规格'] = '5kg/提';
+                        item['商品数量'] = 1;
+                        return item;
+                    });
+                    if (!finalDataMap['XGMY']) finalDataMap['XGMY'] = [];
+                    finalDataMap['XGMY'].push(...outputDataXGMY);
+
+                    // 2. 处理 铂鼎鼎 数据，追加收集到 finalDataMap['BDD']
+                    const outputDataBDD = filteredData.map(row => {
+                        const item = {};
+                        outputFields.forEach(field => {
+                            item[field] = row[field] || '';
+                        });
+                        item['商品名称'] = '铂鼎鼎有机鸡蛋30枚-黑金版';
+                        item['商品数量'] = 1; 
+                        return item;
+                    });
+                    if (!finalDataMap['BDD']) finalDataMap['BDD'] = [];
+                    finalDataMap['BDD'].push(...outputDataBDD);
+
+                    return; // TCZH 数据分配完毕，跳过下方的常规处理
+                }
                 
-                // 过滤输出字段
+                // 过滤常规输出字段
                 const outputData = filteredData.map(row => {
                     const item = {};
                     outputFields.forEach(field => {
@@ -451,43 +487,53 @@ if (ulElement) {
                            }else if(item[field] == "有机富硒可生食宝宝蛋20枚"){
                             item[field]="铂鼎鼎有机宝宝蛋20枚-黑金版";
                            }
-
                         }
                     });
                     return item;
                 });
                 
+                // 将常规商品数据收集到对应商品编码的数组中
+                if (!finalDataMap[code]) finalDataMap[code] = [];
+                finalDataMap[code].push(...outputData);
+            });
+            
+            // 遍历整理好的 finalDataMap，统一生成表格并下载
+            let generatedCount = 0; // 记录实际生成的表格数量
+            Object.keys(finalDataMap).forEach(targetCode => {
+                const targetData = finalDataMap[targetCode];
+                if (targetData.length === 0) return;
+
                 let sheetData;
-                //单元格宽度
                 let wd = [10,10,10,10,10,15,15,10,15,15,15];
                 let worksheet;
-                if (code === "WHNZ") {
-                    sheetData = buildWHAOA(outputData);
+
+                if (targetCode === "WHNZ") {
+                    sheetData = buildWHAOA(targetData);
                     worksheet = XLSX.utils.aoa_to_sheet(sheetData)
                     wd = [20,20,25,20];
-                } else if (code === "TJT") {
-                    sheetData = buildTJTAOA(outputData);
+                } else if (targetCode === "TJT") {
+                    sheetData = buildTJTAOA(targetData);
                     worksheet = XLSX.utils.aoa_to_sheet(sheetData)
                     wd = [20,20,25,20];
-                } else if(code === "BDD"){
-                    sheetData = buildBddAOA(outputData);
+                } else if(targetCode === "BDD"){
+                    sheetData = buildBddAOA(targetData);
                     worksheet = XLSX.utils.aoa_to_sheet(sheetData);
                     processBddSheet(worksheet);
                     wd = [10,20,20,40,30,15,15,15];
                 } else {
-                    sheetData = buildStandardAOA(outputData);                    
+                    sheetData = buildStandardAOA(targetData);                    
                     worksheet = XLSX.utils.aoa_to_sheet(sheetData);
                 }
                 
-                const fileName = `${datePrefix}${productMap[code] || code}发货表.xlsx`;
+                const fileName = `${datePrefix}${productMap[targetCode] || targetCode}发货表.xlsx`;
                 const sheetName = `Sheet1`;
-                downloadXLSX(worksheet, fileName, sheetName,wd);
+                downloadXLSX(worksheet, fileName, sheetName, wd);
+                generatedCount++;
             });
-            
-            // alert(`成功生成 ${selectedCodes.length} 个发货文件`);
-            // 获取信息展示元素
+            // ================== 修改核心结束 ==================
+
             const infoElement = document.getElementById('infoText');
-            infoElement.textContent = `成功生成 ${selectedCodes.length} 个发货文件`;
+            infoElement.textContent = `成功生成 ${generatedCount} 个发货文件`;
             infoElement.style.display = 'block';
         });
 
