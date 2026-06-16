@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>有赞表格处理器</title>
     <style>
-        
         /* 信息展示框样式 */
         #infoText {
             padding: 15px;
@@ -15,7 +14,7 @@
             background-color: #dff0d8;
             border: 1px solid #d6e9c6;
             color: #3c763d;
-            display: none; /* 默认隐藏 */
+            display: none; 
         }
         body {
             font-family: Arial, sans-serif;
@@ -23,7 +22,6 @@
             margin: 0 auto;
             padding: 20px;
         }
-        
         .drop-zone {
             border: 2px dashed #ccc;
             padding: 40px;
@@ -33,37 +31,31 @@
             background-color: #f9f9f9;
             transition: all 0.3s;
         }
-        
         .drop-zone.active {
             border-color: #2196F3;
             background-color: #e3f2fd;
         }
-        
         .controls {
             margin: 20px 0;
             display: none;
         }
-        
         .product-list {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
             margin: 15px 0;
         }
-        
         .product-item {
             border: 1px solid #ddd;
             padding: 10px;
             border-radius: 4px;
             cursor: pointer;
         }
-        
         .product-item.disabled {
             background-color: #f0f0f0;
             color: #999;
             cursor: not-allowed;
         }
-        
         .info-section {
             margin-top: 30px;
             padding: 15px;
@@ -71,7 +63,6 @@
             border-radius: 4px;
             font-size: 0.9em;
         }
-        
         button {
             padding: 8px 15px;
             background-color: #4CAF50;
@@ -81,28 +72,25 @@
             cursor: pointer;
             font-size: 16px;
         }
-        
         button:hover {
             background-color: #45a049;
         }
-/* 基础样式 */
-.label {
-    font-weight: bold;
-    margin-right: 5px;
-}
-
-/* 背景色方案 */
-.light-bg {
-    background-color: #0000; /* 浅色背景 */
-    padding: 2px 5px;
-    border-radius: 3px;
-}
-
-.dark-bg {
-    background-color: #ccc; /* 深色背景 */
-    padding: 2px 5px;
-    border-radius: 3px;
-}
+        /* 基础样式 */
+        .label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        /* 背景色方案 */
+        .light-bg {
+            background-color: #0000;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .dark-bg {
+            background-color: #ccc;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -123,7 +111,6 @@
         <button id="splitBtn">拆分并下载文件</button>
     </div>
     
-    <!-- 信息展示容器 -->
     <div id="infoText"></div>
 
     <div class="info-section">
@@ -131,117 +118,88 @@
         <p>本工具用于根据订单文件中的"商品编码"拆分不同商品的发货数据：</p>
         <ul>
             <li>导出订单时需选择<b>“下载商品报表”</b></li>
-            <!--<li>支持上传 XLSX 或 CSV 格式文件</li>-->
             <li>自动识别商品编码并生成选项列表</li>
             <li>可单独选择或多个商品生成发货单</li>
             <li>分销商品订单不会在列表中显示</li>
             <li>未知商品编码会自动置灰并显示</li>
+            <li>若浏览器提示“是否允许下载多个文件”，请务必点击“允许”</li>
             <li>发出时再核对下信息是否正确</li>
-            <!--<li>输出文件包含订单号、收货人等关键发货信息</li>-->
         </ul>
         <p>导出文件名格式：月日 + 商品编码 + 发货表.xlsx（例如：1021有赞发货表.xlsx）</p>
     </div>
 
-    <!-- 引入SheetJS库处理Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
-        // 商品编码映射表
+        // ================= 1. 配置与常量定义 =================
         const productMap = {
-            'BEM': '不二莓',
-            'YXHY': '洋县鸿源',
-            'AH': '爱荷',
-            'NZG': '糯之光',
-            'ZBZ': '竹帮主',
-            'DXHG': '稻香禾谷',
-            'BDD': '铂鼎鼎',
-            'CF': '初方',
-            'WHNZ': '望哈农庄',
-            'JJP': '九间棚',
-            'BDH': '北大荒',
-            'SJN': '沈佳农',
-            'HEBXL': '哈尔滨兴利',
-            'ZSGN': '紫苏姑娘',
-            'LFXZ': '绿防小镇',
-            'WHBL': '武汉拜乐',
-            'YNLD': '云南良道',
-            'YGQ': '雁归情',
-            'SL': '神栗',
-            'HJX': '禾佳祥',
-            'LJ': '立家',
-            'DYDG': '冬月吊干',
-            'AHFJ': '安徽凰茎',
-            'XKS': '小空山',
-            'TJ': '天锦',
-            'XY': '土家雪滕',
-            'LTS': '龙头山',
-            'TJT': '彤菌堂',
-            'SCCS': '十朝创生',
-            'SBL': '杉宝露',
-            'XBS': '雪博士',
-            'QZG': '秋之光',
-            'LSNY': '良实农业',
-            'HLX': '嗨乐享',
-            'ZKGQ': '早康枸杞',
-            'YNJ': '优农',
-            'XGMY': '六俱珍选&硒谷米业',
-            'EYLQ': '六俱珍选&洱源露秋',
-            'SJ': '石间海麦',
-            'XHNRW': '喜辉牛肉丸',
-            'LGY': '沪沽雁',
-            'HTH': '胡土货',
-            'QXK': '俏虾客',
-            'ZBW': '珍本味',
-            'SWJY': '蛇王就业',
-            'SHLSS': '合理膳食',
-            'HBJ': '红宝吉',
-            'TCZH': '套餐组合',//只适配了硒谷米业、铂鼎鼎单一规格
-            'DHJ': '豆黄金',
-            'TSTS': '天上天山'
+            'BEM': '不二莓', 
+            'YXHY': '洋县鸿源', 'AH': '爱荷', 'NZG': '糯之光',
+            'ZBZ': '竹帮主', 'DXHG': '稻香禾谷', 'BDD': '铂鼎鼎', 'CF': '初方',
+            'WHNZ': '望哈农庄', 'JJP': '九间棚', 'BDH': '北大荒', 'SJN': '沈佳农',
+            'HEBXL': '哈尔滨兴利', 'ZSGN': '紫苏姑娘', 'LFXZ': '绿防小镇', 'WHBL': '武汉拜乐',
+            'YNLD': '云南良道', 'YGQ': '雁归情', 'SL': '神栗', 'HJX': '禾佳祥',
+            'LJ': '立家', 'DYDG': '冬月吊干', 'AHFJ': '安徽凰茎', 'XKS': '小空山',
+            'TJ': '天锦', 'XY': '土家雪滕', 'LTS': '龙头山', 'TJT': '彤菌堂',
+            'SCCS': '十朝创生', 'SBL': '杉宝露', 'XBS': '雪博士', 'QZG': '秋之光',
+            'LSNY': '良实农业', 'HLX': '嗨乐享', 'ZKGQ': '早康枸杞', 'YNJ': '优农',
+            'XGMY': '六俱珍选&硒谷米业', 'EYLQ': '六俱珍选&洱源露秋', 'SJ': '石间海麦',
+            'XHNRW': '喜辉牛肉丸', 'LGY': '沪沽雁', 'HTH': '胡土货', 'QXK': '俏虾客',
+            'ZBW': '珍本味', 'SWJY': '蛇王就业', 'SHLSS': '合理膳食', 'HBJ': '红宝吉',
+            'TCZH': '套餐组合[只适配了硒谷米业、铂鼎鼎单一规格]', 'DHJ': '豆黄金', 'TSTS': '天上天山'
         };
 
-// 获取 info-section 下的 ul 元素
-const infoSectionDiv = document.querySelector('div.info-section');
-let ulElement = infoSectionDiv.querySelector('ul');
-var nowAllowProduct = "现在支持的商品：";
-if (ulElement) {
- const li = document.createElement('li');
-    li.innerHTML = '<span class="label">现在支持的商品：</span>'; // 标题部分
-    
-    // 交替使用的两种背景色类名
-    const colorClasses = ['light-bg', 'dark-bg'];
-    
-    Object.entries(productMap).forEach(([key, value], index) => {
-        const span = document.createElement('span');
-        span.className = colorClasses[index % colorClasses.length]; // 交替应用背景色
-        span.textContent = `${key}-${value}`;
-        li.appendChild(span);
-        
-        // 添加空格分隔（非换行）
-        li.appendChild(document.createTextNode(' '));
-    });
-    
-    ulElement.appendChild(li);
-}
-
-        
-        // 目标输出字段列表
         const outputFields = [
-            "快递公司",
-            "快递单号",
-            '订单号',
-            '订单商品状态',
-            '商品规格ID',
-            '商品名称',
-            '商品规格',
-            '商品数量',
-            '收货人/提货人',
-            '收货人手机号/提货人手机号',
-            '详细收货地址/提货地址',
-            '商品留言',
-            '买家备注'
+            "快递公司", "快递单号", '订单号', '订单商品状态', '商品规格ID',
+            '商品名称', '商品规格', '商品数量', '收货人/提货人',
+            '收货人手机号/提货人手机号', '详细收货地址/提货地址', '商品留言', '买家备注'
         ];
-        
+
+        // 各表格表头映射规则
+        const whHeaderMap = {
+             "收件人姓名":"收货人/提货人", "收件人手机":"收货人手机号/提货人手机号",
+             "收件人地址":"详细收货地址/提货地址", "发货内容":"商品规格", "数量":"商品数量"
+        };
+
+        const tjtHeaderMap = {
+             "收件人(必填)":"收货人/提货人", "手机号(必填)":"收货人手机号/提货人手机号",
+             "收货地址(必填)":"详细收货地址/提货地址", "商品信息(非必填)":"商品名称",
+             "数量":"商品数量", "平台订单号（非必填）":"订单号"
+        };
+
+        const bddHeaderMap = {
+            "客户订单号":"订单号", "*收件人":"收货人/提货人", "*收件人手机":"收货人手机号/提货人手机号",
+            "*收件人详细地址":"详细收货地址/提货地址", "*托寄物":"商品名称", "托寄物数量":"商品数量",
+            "*物流产品":"", "*物流付款方式":""
+        };
+
+        // 统一配置不同表格的导出策略（Strategy Pattern）
+        const exportStrategies = {
+            'WHNZ': { build: data => buildSimpleMultiRowAOA(data, whHeaderMap), widths: [20,20,25,20] },
+            'TJT':  { build: data => buildSimpleMultiRowAOA(data, tjtHeaderMap), widths: [20,20,25,20] },
+            'BDD':  { build: buildBddAOA, process: processBddSheet, widths: [10,20,20,40,30,15,15,15] },
+            'DEFAULT': { build: buildStandardAOA, widths: [10,10,10,10,10,15,15,10,15,15,15] }
+        };
+
+        // ================= 2. DOM 初始化与事件绑定 =================
+        // 初始化底部支持商品列表
+        const infoSectionDiv = document.querySelector('div.info-section');
+        let ulElement = infoSectionDiv.querySelector('ul');
+        if (ulElement) {
+            const li = document.createElement('li');
+            li.innerHTML = '<span class="label">现在支持的商品：</span>';
+            const colorClasses = ['light-bg', 'dark-bg'];
+            
+            Object.entries(productMap).forEach(([key, value], index) => {
+                const span = document.createElement('span');
+                span.className = colorClasses[index % colorClasses.length];
+                span.textContent = `${key}-${value}`;
+                li.appendChild(span);
+                li.appendChild(document.createTextNode(' '));
+            });
+            ulElement.appendChild(li);
+        }
+
         let parsedData = [];
         const dropZone = document.getElementById('dropZone');
         const controls = document.getElementById('controls');
@@ -249,435 +207,219 @@ if (ulElement) {
         const selectAll = document.getElementById('selectAll');
         const splitBtn = document.getElementById('splitBtn');
         
-        // 初始化拖放区域
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
+        // 合并拖放事件绑定
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
         });
+        ['dragenter', 'dragover'].forEach(evt => dropZone.addEventListener(evt, () => dropZone.classList.add('active'), false));
+        ['dragleave', 'drop'].forEach(evt => dropZone.addEventListener(evt, () => dropZone.classList.remove('active'), false));
         
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, unhighlight, false);
-        });
-        
-        dropZone.addEventListener('drop', handleDrop, false);
-        
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
-        function highlight() {
-            dropZone.classList.add('active');
-        }
-        
-        function unhighlight() {
-            dropZone.classList.remove('active');
-        }
-        
-        // 处理文件拖放
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            processFiles(files);
-        }
-        
-        // 处理文件
+        dropZone.addEventListener('drop', e => processFiles(e.dataTransfer.files), false);
+
+        // ================= 3. 文件读取与解析 =================
         function processFiles(files) {
             if (files.length === 0) return;
-            
             const file = files[0];
             const reader = new FileReader();
             
-            reader.onload = function(e) {
-                try {
-                    processFileContent(e.target.result, file);
-                } catch (error) {
-                    alert('文件处理失败: ' + error.message);
-                }
+            reader.onload = e => {
+                try { processFileContent(e.target.result, file); } 
+                catch (error) { alert('文件处理失败: ' + error.message); }
             };
             
-            if (file.name.endsWith('.csv')) {
-                reader.readAsText(file);
-            } else {
-                reader.readAsArrayBuffer(file);
-            }
+            file.name.endsWith('.csv') ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
         }
         
-        // 处理文件内容
         function processFileContent(content, file) {
-            let jsonData = [];
-            
             if (file.name.endsWith('.csv')) {
-                // 处理CSV文件
-                jsonData = processCSV(content);
+                parsedData = processCSV(content);
             } else {
-                // 处理Excel文件
                 const workbook = XLSX.read(content, { type: 'array' });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                jsonData = XLSX.utils.sheet_to_json(worksheet);
+                parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             }
+            if (parsedData.length === 0) throw new Error('未找到有效数据');
             
-            if (jsonData.length === 0) {
-                throw new Error('未找到有效数据');
-            }
-            
-            parsedData = jsonData;
             generateProductList();
             controls.style.display = 'block';
         }
         
-        // 处理CSV文件内容
         function processCSV(csvContent) {
             const lines = csvContent.split('\n').filter(line => line.trim() !== '');
             if (lines.length < 2) return [];
-            
             const headers = lines[0].split(',').map(h => h.trim());
-            const result = [];
-            
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim());
+            return lines.slice(1).map(line => {
+                const values = line.split(',').map(v => v.trim());
                 const obj = {};
-                
-                for (let j = 0; j < headers.length; j++) {
-                    if (j < values.length) {
-                        obj[headers[j]] = values[j];
-                    }
-                }
-                
-                result.push(obj);
-            }
-            
-            return result;
+                headers.forEach((h, j) => { if (j < values.length) obj[h] = values[j]; });
+                return obj;
+            });
         }
         
-        // 生成商品列表
+        // ================= 4. 界面交互 =================
         function generateProductList() {
             productList.innerHTML = '';
             const foundCodes = new Set();
             
-            // 查找商品编码并去重
             parsedData.forEach(row => {
-                if (row['商品编码'] &&  row['订单商品状态']=='待发货'  && !row['商品类型'].toLowerCase().includes('分销')) {
+                if (row['商品编码'] && row['订单商品状态'] == '待发货' && !row['商品类型'].toLowerCase().includes('分销')) {
                     foundCodes.add(row['商品编码']);
                 }
             });
             
-            // 生成多选框
             Array.from(foundCodes).forEach(code => {
-                const displayName = productMap[code] || code;
                 const isKnown = productMap.hasOwnProperty(code);
-                
                 const label = document.createElement('label');
                 label.style.margin = '5px';
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = code;
-                checkbox.disabled = !isKnown;
-                
-                const span = document.createElement('span');
-                span.textContent = displayName;
-                
-                label.appendChild(checkbox);
-                label.appendChild(span);
+                label.innerHTML = `<input type="checkbox" value="${code}" ${isKnown ? '' : 'disabled'}> <span>${productMap[code] || code}</span>`;
                 
                 const item = document.createElement('div');
-                item.className = 'product-item';
-                if (!isKnown) {
-                    item.classList.add('disabled');
-                    item.title = `未知商品编码: ${code}`;
-                }
+                item.className = `product-item ${isKnown ? '' : 'disabled'}`;
+                if (!isKnown) item.title = `未知商品编码: ${code}`;
                 
                 item.appendChild(label);
                 productList.appendChild(item);
             });
         }
         
-        // 全选/取消全选
-        selectAll.addEventListener('click', function() {
-            const checkboxes = productList.querySelectorAll('input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                if (!checkbox.disabled) {
-                    checkbox.checked = selectAll.checked;
-                }
-            });
+        selectAll.addEventListener('click', () => {
+            productList.querySelectorAll('input[type="checkbox"]:not(:disabled)')
+                       .forEach(cb => cb.checked = selectAll.checked);
         });
         
-        // 拆分处理
+        // ================= 5. 核心：数据拆分与处理 =================
+
+        // 提取单行数据的标准化方法，减少循环内的重复代码
+        function extractStandardItem(row) {
+            const item = {};
+            outputFields.forEach(field => item[field] = row[field] || '');
+            return item;
+        }
+
+        // 提取铂鼎鼎专属商品名称转换逻辑
+        function formatBddProductName(originalName) {
+            const map = {
+                "无抗富硒散养鸡蛋30枚": "铂鼎鼎无抗富硒散养土鸡蛋30枚",
+                "非笼养自由鸡蛋30枚": "铂鼎鼎普通非笼养30枚",
+                "有机富硒土鸡蛋30枚（黑金版）": "铂鼎鼎有机鸡蛋30枚-黑金版",
+                "有机富硒可生食宝宝蛋20枚": "铂鼎鼎有机宝宝蛋20枚-黑金版"
+            };
+            return map[originalName] || originalName;
+        }
+
         splitBtn.addEventListener('click', function() {
-            const selectedCodes = Array.from(productList.querySelectorAll('input[type="checkbox"]'))
-                .filter(cb => cb.checked && !cb.disabled)
-                .map(cb => cb.value);
+            const selectedCodes = Array.from(productList.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)')).map(cb => cb.value);
+            if (selectedCodes.length === 0) return alert('请选择至少一个商品');
             
-            if (selectedCodes.length === 0) {
-                alert('请选择至少一个商品');
-                return;
-            }
+            const datePrefix = `${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}`;
+            const finalDataMap = {}; // 按导出目标（TargetCode）对数据进行归类分组
             
-            // 获取当前日期 (MMdd格式)
-            const today = new Date();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const date = String(today.getDate()).padStart(2, '0');
-            const datePrefix = `${month}${date}`;
+            // 辅助函数：将处理好的对象推入对应的分类中
+            const pushToMap = (targetCode, item) => {
+                if (!finalDataMap[targetCode]) finalDataMap[targetCode] = [];
+                finalDataMap[targetCode].push(item);
+            };
 
-            // ================== 修改核心：增加数据合并容器 ==================
-            // 使用一个对象将同类发货表的数据收集起来，避免重复生成相同的表格
-            const finalDataMap = {};
-            
-            selectedCodes.forEach(code => {
-                // 过滤数据
-                const filteredData = parsedData.filter(row => 
-                    row['商品编码'] === code && 
-                    row['订单商品状态']=='待发货'  && 
-                    !row['商品类型'].toLowerCase().includes('分销')
-                );
+            // 以“原始数据行”为基础进行遍历
+            parsedData.forEach(row => {
+                if (row['订单商品状态'] !== '待发货' || row['商品类型'].toLowerCase().includes('分销')) return;
                 
-                if (filteredData.length === 0) return;
+                const code = row['商品编码'];
+                if (!selectedCodes.includes(code)) return;
 
-                // 针对套餐组合 [TCZH] 的特殊处理
+                // 针对套餐的解包逻辑
                 if (code === 'TCZH') {
-                    // 1. 处理 六俱珍选&硒谷米业 数据，追加收集到 finalDataMap['XGMY']
-                    const outputDataXGMY = filteredData.map(row => {
-                        const item = {};
-                        outputFields.forEach(field => {
-                            item[field] = row[field] || '';
-                        });
-                        item['商品名称'] = '六俱珍选海伦大米地标长粒香5kg/提新米';
-                        item['商品规格'] = '5kg/提';
-                        item['商品数量'] = 1;
-                        return item;
-                    });
-                    if (!finalDataMap['XGMY']) finalDataMap['XGMY'] = [];
-                    finalDataMap['XGMY'].push(...outputDataXGMY);
+                    // 分拆给：六俱珍选
+                    let itemXGMY = extractStandardItem(row);
+                    itemXGMY['商品名称'] = '六俱珍选海伦大米地标长粒香5kg/提新米';
+                    itemXGMY['商品规格'] = '5kg/提';
+                    itemXGMY['商品数量'] = 1;
+                    pushToMap('XGMY', itemXGMY);
 
-                    // 2. 处理 铂鼎鼎 数据，追加收集到 finalDataMap['BDD']
-                    const outputDataBDD = filteredData.map(row => {
-                        const item = {};
-                        outputFields.forEach(field => {
-                            item[field] = row[field] || '';
-                        });
-                        item['商品名称'] = '铂鼎鼎有机鸡蛋30枚-黑金版';
-                        item['商品数量'] = 1; 
-                        return item;
-                    });
-                    if (!finalDataMap['BDD']) finalDataMap['BDD'] = [];
-                    finalDataMap['BDD'].push(...outputDataBDD);
-
-                    return; // TCZH 数据分配完毕，跳过下方的常规处理
+                    // 分拆给：铂鼎鼎
+                    let itemBDD = extractStandardItem(row);
+                    itemBDD['商品名称'] = '铂鼎鼎有机鸡蛋30枚-黑金版';
+                    itemBDD['商品数量'] = 1;
+                    pushToMap('BDD', itemBDD);
+                } else {
+                    // 常规处理逻辑
+                    let item = extractStandardItem(row);
+                    if (code === 'BDD') {
+                        item['商品名称'] = formatBddProductName(item['商品名称']);
+                    }
+                    pushToMap(code, item);
                 }
-                
-                // 过滤常规输出字段
-                const outputData = filteredData.map(row => {
-                    const item = {};
-                    outputFields.forEach(field => {
-                        item[field] = row[field] || '';
-                        
-                        //铂鼎鼎商品需单独处理
-                        if(field == "商品名称" && row["商品编码"]=="BDD"){
-                           if(item[field] == "无抗富硒散养鸡蛋30枚"){
-                            item[field]="铂鼎鼎无抗富硒散养土鸡蛋30枚";
-                           }else if(item[field] == "非笼养自由鸡蛋30枚"){
-                            item[field]="铂鼎鼎普通非笼养30枚";
-                           }else if(item[field] == "有机富硒土鸡蛋30枚（黑金版）"){
-                            item[field]="铂鼎鼎有机鸡蛋30枚-黑金版";
-                           }else if(item[field] == "有机富硒可生食宝宝蛋20枚"){
-                            item[field]="铂鼎鼎有机宝宝蛋20枚-黑金版";
-                           }
-                        }
-                    });
-                    return item;
-                });
-                
-                // 将常规商品数据收集到对应商品编码的数组中
-                if (!finalDataMap[code]) finalDataMap[code] = [];
-                finalDataMap[code].push(...outputData);
             });
             
-            // 遍历整理好的 finalDataMap，统一生成表格并下载
-            let generatedCount = 0; // 记录实际生成的表格数量
+            // 遍历归类好的数据，利用配置好的策略生成表格
+            let generatedCount = 0;
             Object.keys(finalDataMap).forEach(targetCode => {
                 const targetData = finalDataMap[targetCode];
                 if (targetData.length === 0) return;
 
-                let sheetData;
-                let wd = [10,10,10,10,10,15,15,10,15,15,15];
-                let worksheet;
-
-                if (targetCode === "WHNZ") {
-                    sheetData = buildWHAOA(targetData);
-                    worksheet = XLSX.utils.aoa_to_sheet(sheetData)
-                    wd = [20,20,25,20];
-                } else if (targetCode === "TJT") {
-                    sheetData = buildTJTAOA(targetData);
-                    worksheet = XLSX.utils.aoa_to_sheet(sheetData)
-                    wd = [20,20,25,20];
-                } else if(targetCode === "BDD"){
-                    sheetData = buildBddAOA(targetData);
-                    worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-                    processBddSheet(worksheet);
-                    wd = [10,20,20,40,30,15,15,15];
-                } else {
-                    sheetData = buildStandardAOA(targetData);                    
-                    worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-                }
+                // 匹配策略，如果没有专属策略则走 DEFAULT 策略
+                const strategy = exportStrategies[targetCode] || exportStrategies['DEFAULT'];
+                
+                const sheetData = strategy.build(targetData);
+                const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+                if (strategy.process) strategy.process(worksheet);
                 
                 const fileName = `${datePrefix}${productMap[targetCode] || targetCode}发货表.xlsx`;
-                const sheetName = `Sheet1`;
-                downloadXLSX(worksheet, fileName, sheetName, wd);
+                downloadXLSX(worksheet, fileName, 'Sheet1', strategy.widths);
                 generatedCount++;
             });
-            // ================== 修改核心结束 ==================
 
             const infoElement = document.getElementById('infoText');
             infoElement.textContent = `成功生成 ${generatedCount} 个发货文件`;
             infoElement.style.display = 'block';
         });
 
+        // ================= 6. 表格构建模块 =================
         function buildStandardAOA(data) {
-            const headerRow = [...outputFields];
-            const rows = data.map(item => outputFields.map(field => item[field] || ''));
-            return [headerRow, ...rows];
+            return [[...outputFields], ...data.map(item => outputFields.map(field => item[field] || ''))];
         }
 
-        const whHeaderMap = {
-             "收件人姓名":"收货人/提货人",
-             "收件人手机":"收货人手机号/提货人手机号",
-             "收件人地址":"详细收货地址/提货地址",
-             "发货内容":"商品规格",
-            //  "数量":"商品数量",
-            //  "客户订单号":"订单号"
-        };
-
-        function buildWHAOA(data) {
-            const headerRow = Object.keys(whHeaderMap);
+        // 将 TJT 和 WHNZ 极为相似的「按数量重复生成行」逻辑合并为一个通用函数
+        function buildSimpleMultiRowAOA(data, headerMap) {
+            const headerRow = Object.keys(headerMap);
             const rows = [];
-
             data.forEach(item => {
-
                 const repeats = item["商品数量"] || 1;
-                
                 for (let i = 0; i < repeats; i++) {
-                    const row = headerRow.map(field => {
-                        
-                        if (field === "数量") {
-                            return 1; // 直接返回1
-                        }
-                        
-                        const dataKey = whHeaderMap[field];
-                        return item[dataKey] || '';
-                    });
-                    rows.push(row);
+                    rows.push(headerRow.map(field => field === "数量" ? 1 : (item[headerMap[field]] || '')));
                 }
             });
-
             return [headerRow, ...rows];
         }
 
-
-        const tjtHeaderMap = {
-             "收件人(必填)":"收货人/提货人",
-             "手机号(必填)":"收货人手机号/提货人手机号",
-             "收货地址(必填)":"详细收货地址/提货地址",
-             "商品信息(非必填)":"商品名称",
-             "数量":"商品数量",
-             "平台订单号（非必填）":"订单号"
-        };
-
-        function buildTJTAOA(data) {
-            const headerRow = Object.keys(tjtHeaderMap);
-            const rows = [];
-
-            data.forEach(item => {
-
-                const repeats = item["商品数量"] || 1;
-                
-                for (let i = 0; i < repeats; i++) {
-                    const row = headerRow.map(field => {
-                        
-                        if (field === "数量") {
-                            return 1; // 直接返回1
-                        }
-                        
-                        const dataKey = tjtHeaderMap[field];
-                        return item[dataKey] || '';
-                    });
-                    rows.push(row);
-                }
-            });
-
-            return [headerRow, ...rows];
-        }
-
-        const bddHeaderMap = {
-            "客户订单号":"订单号",
-             "*收件人":"收货人/提货人",
-             "*收件人手机":"收货人手机号/提货人手机号",
-             "*收件人详细地址":"详细收货地址/提货地址",
-             "*托寄物":"商品名称",
-             "托寄物数量":"商品数量",
-             "*物流产品":"",
-             "*物流付款方式":""
-             
-        };
         function buildBddAOA(data) {
             const headerRow = Object.keys(bddHeaderMap);
             const rows = [];
-            // 标题行（合并单元格所在行）
             const title = [null,'收方信息', null, null, '货物信息', null, '物流产品信息', null];
 
             data.forEach(item => {
-
                 const repeats = item["商品数量"] || 1;
-                
                 for (let i = 0; i < repeats; i++) {
-                    const row = headerRow.map(field => {
-                        
-                        if (field === "托寄物数量") {
-                            return 1; // 直接返回1
-                        }else if(field === "*物流产品"){
-                            return "陆运包裹";
-                        }else if(field === "*物流付款方式"){
-                            return "寄付月结";
-                        }
-                        
-                        const dataKey = bddHeaderMap[field];
-                        return item[dataKey] || '';
-                    });
-                    rows.push(row);
+                    rows.push(headerRow.map(field => {
+                        if (field === "托寄物数量") return 1;
+                        if (field === "*物流产品") return "陆运包裹";
+                        if (field === "*物流付款方式") return "寄付月结";
+                        return item[bddHeaderMap[field]] || '';
+                    }));
                 }
             });
-
-            return [title,headerRow, ...rows];
+            return [title, headerRow, ...rows];
         }
            
         function processBddSheet(worksheet) {
-            // 合并单元格
             worksheet['!merges'] = [
-
-                // 收方信息（合并）
-                {s: {r: 0, c: 1}, e: {r: 0, c: 3}},
-                
-                // 货物信息（合并）
-                {s: {r: 0, c: 4}, e: {r: 0, c: 5}},
-                
-                // 物流产品信息（合并）
-                {s: {r: 0, c: 6}, e: {r: 0, c: 7}}
+                {s: {r: 0, c: 1}, e: {r: 0, c: 3}}, // 收方信息
+                {s: {r: 0, c: 4}, e: {r: 0, c: 5}}, // 货物信息
+                {s: {r: 0, c: 6}, e: {r: 0, c: 7}}  // 物流产品信息
             ];
-
         }
 
-
         function downloadXLSX(worksheet, fileName, sheetName, columnWidths = []) {
-
-            // 设置列宽（需要指定每列宽度）
-            if (columnWidths.length > 0) {
-                worksheet['!cols'] = columnWidths.map(w => ({ width: w }));
-            }
-
+            if (columnWidths.length > 0) worksheet['!cols'] = columnWidths.map(w => ({ width: w }));
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
             const workbookArray = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
@@ -690,7 +432,6 @@ if (ulElement) {
             link.click();
             document.body.removeChild(link);
         }
-
     </script>
 </body>
 </html>
