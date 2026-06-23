@@ -328,17 +328,34 @@
 
                 // 针对套餐的解包逻辑
                 if (code === 'TCZH') {
+                    const spec = row['商品规格'] ? row['商品规格'].trim() : '';
+                    let qtyXGMY = 1;
+                    let qtyBDD = 1;
+
+                    // 完整匹配规格名字
+                    if (spec === '3箱富硒有机土鸡蛋30个/箱+1袋5kg海伦长粒香大米') {
+                        qtyXGMY = 1;
+                        qtyBDD = 3;
+                    } else if (spec === '3袋5kg海伦大米+1箱30个富硒有机鸡蛋') {
+                        qtyXGMY = 3;
+                        qtyBDD = 1;
+                    }else{
+                        // 若不匹配，弹窗提示并直接报错阻断程序
+                        alert('【错误】发现未知的套餐规格："' + spec + '"，程序已终止！请核对后重试。');
+                        throw new Error('未知的套餐规格: ' + spec);
+                    }
+
                     // 分拆给：六俱珍选
                     let itemXGMY = extractStandardItem(row);
                     itemXGMY['商品名称'] = '六俱珍选海伦大米地标长粒香5kg/提新米';
                     itemXGMY['商品规格'] = '5kg/提';
-                    itemXGMY['商品数量'] = 1;
+                    itemXGMY['商品数量'] = qtyXGMY;
                     pushToMap('XGMY', itemXGMY);
 
                     // 分拆给：铂鼎鼎
                     let itemBDD = extractStandardItem(row);
                     itemBDD['商品名称'] = '铂鼎鼎有机鸡蛋30枚-黑金版';
-                    itemBDD['商品数量'] = 1;
+                    itemBDD['商品数量'] = qtyBDD;
                     pushToMap('BDD', itemBDD);
                 } else {
                     // 常规处理逻辑
