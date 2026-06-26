@@ -329,12 +329,19 @@
                 // 针对套餐的解包逻辑
                 if (code === 'TCZH') {
                     const spec = row['商品规格'] ? row['商品规格'].trim() : '';
+                    const productName = row['商品名称'] ? row['商品名称'].trim() : ''; 
+                    
                     let qtyXGMY = 1;
                     let qtyBDD = 1;
                     let qtyNZG = 0;
+                    let qtyZBW = 0;
 
                     // 完整匹配规格名字
-                    if (spec === '3箱富硒有机土鸡蛋30个/箱+1袋5kg海伦长粒香大米') {
+                    if (productName === '珍本味胡须鸡套餐') {
+                        qtyZBW = 1;
+                        qtyNZG = 1;
+                        qtyBDD = 1;
+                    }else if (spec === '3箱富硒有机土鸡蛋30个/箱+1袋5kg海伦长粒香大米') {
                         qtyXGMY = 1;
                         qtyBDD = 3;
                     } else if (spec === '3袋5kg海伦大米+1箱30个富硒有机鸡蛋') {
@@ -345,30 +352,41 @@
                         qtyBDD = 1;
                         qtyNZG = 3;
                     }else{
-                        // 若不匹配，弹窗提示并直接报错阻断程序
-                        alert('【错误】发现未知的套餐规格："' + spec + '"，程序已终止！请核对后重试。');
-                        throw new Error('未知的套餐规格: ' + spec);
+                        // 若都不匹配，弹窗提示并直接报错阻断程序
+                        alert('【错误】发现未知的套餐商品或规格："' + productName + ' | ' + spec + '"，程序已终止！请核对后重试。');
+                        throw new Error('未知的套餐商品或规格: ' + productName + ' | ' + spec);
                     }
 
                     // 分拆给：六俱珍选
-                    let itemXGMY = extractStandardItem(row);
-                    itemXGMY['商品名称'] = '六俱珍选海伦大米地标长粒香5kg/提新米';
-                    itemXGMY['商品规格'] = '5kg/提';
-                    itemXGMY['商品数量'] = qtyXGMY;
-                    pushToMap('XGMY', itemXGMY);
-
+                    if (qtyXGMY > 0) {
+                        let itemXGMY = extractStandardItem(row);
+                        itemXGMY['商品名称'] = '六俱珍选海伦大米地标长粒香5kg/提新米';
+                        itemXGMY['商品规格'] = '5kg/提';
+                        itemXGMY['商品数量'] = qtyXGMY;
+                        pushToMap('XGMY', itemXGMY);
+                    }
                     // 分拆给：铂鼎鼎
-                    let itemBDD = extractStandardItem(row);
-                    itemBDD['商品名称'] = '铂鼎鼎有机鸡蛋30枚-黑金版';
-                    itemBDD['商品数量'] = qtyBDD;
-                    pushToMap('BDD', itemBDD);
-
+                    if (qtyBDD > 0) {
+                        let itemBDD = extractStandardItem(row);
+                        itemBDD['商品名称'] = '铂鼎鼎有机鸡蛋30枚-黑金版';
+                        itemBDD['商品数量'] = qtyBDD;
+                        pushToMap('BDD', itemBDD);
+                    }
+                    // 分拆给：糯之光
                     if (qtyNZG > 0) {
                         let itemNZG = extractStandardItem(row);
                         itemNZG['商品名称'] = '西双版纳A级香糯小玉米4斤/箱';
                         itemNZG['商品规格'] = '4斤/箱（约10-13根）';
                         itemNZG['商品数量'] = qtyNZG;
                         pushToMap('NZG', itemNZG);
+                    }
+
+                    // 分拆给：珍本味
+                    if (qtyZBW > 0) {
+                        let itemZBW = extractStandardItem(row);
+                        itemZBW['商品名称'] = '珍本味胡须鸡';
+                        itemZBW['商品数量'] = qtyZBW;
+                        pushToMap('ZBW', itemZBW);
                     }
                 } else {
                     // 常规处理逻辑
