@@ -114,15 +114,15 @@ function processor1(data, fileName) {
     
     for(let i = 1; i < data.length; i++) {
         let row = data[i];
-        let productCode = '6935324400042'; // 默认商品编码（保留原逻辑的默认值）
+        let productCode = '6935324400042-shangchao'; // 默认商品编码（保留原逻辑的默认值）
         
         // 3. 如果找到了「sku编码」列，则根据对应的值动态修改商品编码
         if (skuIndex !== -1) {
             const skuValue = String(row[skuIndex] || '').trim();
             if (skuValue === '20017-04429925') {
-                productCode = 'PDD_WJ_002';
+                productCode = 'scbjg5g-3';
             } else if (skuValue === '20017-03429925') {
-                productCode = 'PDD_WJ_001';
+                productCode = 'scbjg5g-2';
             }
         }
         
