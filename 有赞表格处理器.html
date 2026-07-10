@@ -420,6 +420,49 @@
                                     let itemHLSS = extractStandardItem(row);
                                     pushToMap('HLSS', itemHLSS);
 
+                                }else if (spec === '42天代谢调理服务') {
+                                    // 基础：继承【7天体验装】的所有分拆项
+                                    let itemBDD = extractStandardItem(row);
+                                    itemBDD['商品名称'] = '铂鼎鼎有机宝宝蛋20枚-黑金版'; 
+                                    itemBDD['商品数量'] = 1;
+                                    pushToMap('BDD', itemBDD);
+
+                                    let itemZBW = extractStandardItem(row);
+                                    itemZBW['商品名称'] = '珍本味胡须鸡'; 
+                                    itemZBW['商品规格'] = '';
+                                    itemZBW['商品数量'] = 1;
+                                    pushToMap('ZBW', itemZBW);
+
+                                    let itemZSGN = extractStandardItem(row);
+                                    itemZSGN['商品名称'] = '有机紫苏籽油100ml/瓶';
+                                    itemZSGN['商品规格'] = '紫苏籽油100ml*1瓶';
+                                    itemZSGN['商品数量'] = 1;
+                                    pushToMap('ZSGN', itemZSGN);
+
+                                    let itemHLSS = extractStandardItem(row);
+                                    pushToMap('HLSS', itemHLSS);
+
+                                    // 新增分拆 1：俏虾客 (QXK)
+                                    let itemQXK = extractStandardItem(row);
+                                    itemQXK['商品名称'] = '有机盐田虾3盒装';
+                                    itemQXK['商品规格'] = '熟虾500g×3盒【解冻即食】';
+                                    itemQXK['商品数量'] = 1;
+                                    pushToMap('QXK', itemQXK);
+
+                                    // 新增分拆 2：沈佳农 (SJN)
+                                    let itemSJN = extractStandardItem(row);
+                                    itemSJN['商品名称'] = '【顺丰冷链】有机牛肉';
+                                    itemSJN['商品规格'] = '有机牛上脑1kg';
+                                    itemSJN['商品数量'] = 1;
+                                    pushToMap('SJN', itemSJN);
+
+                                    // 新增分拆 3：糯之光 (NZG)
+                                    let itemNZG = extractStandardItem(row);
+                                    itemNZG['商品名称'] = '西双版纳A级香糯小玉米4斤/箱'; 
+                                    itemNZG['商品规格'] = '4斤/箱（约10-13根）';  
+                                    itemNZG['商品数量'] = 3;
+                                    pushToMap('NZG', itemNZG);
+
                                 } else {
                                     // 规格不是【7天体验装】则弹窗报错并阻断程序
                                     alert('【错误】发现未知的【初级代谢调理服务】商品规格："' + spec + '"，程序已终止！请核对后重试。');
