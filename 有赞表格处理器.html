@@ -332,12 +332,14 @@
                     const productName = row['商品名称'] ? row['商品名称'].trim() : ''; 
                     
                     let qtyXGMY = 0;
-                    let qtyBDD = 1;
+                    let qtyBDD = 0;
                     let qtyNZG = 0;
                     let qtyZBW = 0;
 
-                    // 完整匹配规格名字
-                    if (productName === '珍本味胡须鸡套餐') {
+                    // 完整匹配商品名称或规格
+                    if (productName === '【年卡】六俱珍选海伦大米地标长粒香5kg*12提') {
+                        qtyXGMY = 1; // 生成 1 份海伦大米发货单
+                    }else if (productName === '珍本味胡须鸡套餐') {
                         qtyZBW = 1;
                         qtyNZG = 1;
                         qtyBDD = 1;
